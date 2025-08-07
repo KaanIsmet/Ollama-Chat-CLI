@@ -2,6 +2,9 @@
 
 An enhanced command-line interface for Ollama that adds persistent chat sessions, starring, tagging, and export functionality to your AI conversations.
 
+## Disclaimer
+This is only a prototype, so use it at your own risk. Under the Apache 2.0 License, I am not liable for any outcomes that might happen when you run this app.
+
 ## Features
 
 - 💬 **Persistent Chat Sessions** - Save and resume conversations across sessions
@@ -229,7 +232,7 @@ python ollama-chat.py list --help
 
 ## License
 
-This project is open source. Feel free to modify and distribute according to your needs.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
