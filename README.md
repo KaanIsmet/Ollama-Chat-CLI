@@ -2,8 +2,6 @@
 
 An enhanced command-line interface for Ollama that adds persistent chat sessions, starring, tagging, and export functionality to your AI conversations.
 
-## Disclaimer
-This is only a prototype, so use it at your own risk. Under the Apache 2.0 License, I am not liable for any outcomes that might happen when you run this app.
 
 ## Features
 
