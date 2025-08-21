@@ -1,7 +1,6 @@
 # Ollama Chat CLI
 
-An enhanced command-line interface for Ollama that adds persistent chat sessions, starring, tagging, and export functionality to your AI conversations.
-
+A robust command-line interface for Ollama built with Java, featuring persistent chat sessions, starring, tagging, and export functionality for your AI conversations.
 
 ## Features
 
@@ -11,25 +10,43 @@ An enhanced command-line interface for Ollama that adds persistent chat sessions
 - 📚 **Chat History** - View and manage all your previous conversations
 - 📤 **Export Functionality** - Export chats to JSON or text formats
 - 🔄 **Resume Conversations** - Pick up where you left off in any chat
-- 🗃️ **SQLite Database** - Local storage with no external dependencies
+- 💾 **File-based Storage** - Local JSON storage with no external dependencies
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.6 or higher
+- Java 11 or higher
 - [Ollama](https://ollama.ai/) installed and running
+- Maven (for building from source)
 
-### Setup
+### Building from Source
 
-1. Save the script as `ollama-chat.py`
-2. Make it executable:
+1. Clone the repository:
    ```bash
-   chmod +x ollama-chat.py
+   git clone https://github.com/yourusername/ollama-chat-cli.git
+   cd ollama-chat-cli
    ```
-3. Optionally, create a symlink for easy access:
+
+2. Build with Maven:
    ```bash
-   ln -s /path/to/ollama-chat.py /usr/local/bin/ollama-chat
+   mvn clean package
+   ```
+
+3. The executable JAR will be created at `target/ollama-cli-1.0-SNAPSHOT.jar`
+
+### Installation
+
+1. Copy the JAR to a directory in your PATH:
+   ```bash
+   sudo cp target/ollama-cli-1.0-SNAPSHOT.jar /usr/local/bin/ollama-cli.jar
+   ```
+
+2. Create a shell script wrapper:
+   ```bash
+   echo '#!/bin/bash
+   java -jar /usr/local/bin/ollama-cli.jar "$@"' | sudo tee /usr/local/bin/ollama-cli
+   sudo chmod +x /usr/local/bin/ollama-cli
    ```
 
 ## Usage
@@ -37,12 +54,12 @@ An enhanced command-line interface for Ollama that adds persistent chat sessions
 ### Start a New Chat
 
 ```bash
-python ollama-chat.py chat <model_name>
+ollama-cli chat <model_name>
 ```
 
 Example:
 ```bash
-python ollama-chat.py chat llama2
+ollama-cli chat llama2
 ```
 
 When starting a new chat, you'll be prompted for:
@@ -52,35 +69,35 @@ When starting a new chat, you'll be prompted for:
 ### Resume an Existing Chat
 
 ```bash
-python ollama-chat.py chat <model_name> --resume <chat_id>
+ollama-cli chat <model_name> --resume <chat_id>
 ```
 
 Example:
 ```bash
-python ollama-chat.py chat llama2 --resume 5
+ollama-cli chat llama2 --resume 5
 ```
 
 ### List All Chats
 
 ```bash
-python ollama-chat.py list
+ollama-cli list
 ```
 
 Show only starred chats:
 ```bash
-python ollama-chat.py list --starred
+ollama-cli list --starred
 ```
 
 ### Star/Unstar Chats
 
 Star a chat:
 ```bash
-python ollama-chat.py star <chat_id>
+ollama-cli star <chat_id>
 ```
 
 Unstar a chat:
 ```bash
-python ollama-chat.py unstar <chat_id>
+ollama-cli unstar <chat_id>
 ```
 
 You can also star/unstar during a chat session using `/star` and `/unstar` commands.
@@ -88,19 +105,19 @@ You can also star/unstar during a chat session using `/star` and `/unstar` comma
 ### Delete a Chat
 
 ```bash
-python ollama-chat.py delete <chat_id>
+ollama-cli delete <chat_id>
 ```
 
 ### Export Chat
 
 Export to JSON (default):
 ```bash
-python ollama-chat.py export <chat_id>
+ollama-cli export <chat_id>
 ```
 
 Export to text file:
 ```bash
-python ollama-chat.py export <chat_id> --format txt
+ollama-cli export <chat_id> --format txt
 ```
 
 ## Interactive Commands
@@ -111,31 +128,72 @@ While in a chat session, you can use these commands:
 - `/star` - Star the current chat
 - `/unstar` - Unstar the current chat
 
-## Database Storage
+## Data Storage
 
-The CLI stores all data locally in an SQLite database located at:
+The CLI stores all data locally using JSON files in:
 ```
-~/.ollama_chat/chats.db
+~/.ollama-cli/
+├── chats/
+│   ├── chat-001.json
+│   ├── chat-002.json
+│   └── ...
+└── index.json
 ```
 
-### Database Schema
+### Storage Structure
 
-The database contains two main tables:
+#### `index.json`:
+Contains chat metadata:
+```json
+{
+  "chats": [
+    {
+      "id": "001",
+      "title": "My Python Questions",
+      "model": "llama2",
+      "created_at": "2024-01-15T10:30:45Z",
+      "starred": true,
+      "tags": ["python", "programming"]
+    }
+  ]
+}
+```
 
-#### `chats` table:
-- `id` - Unique chat identifier
-- `title` - Chat title
-- `model` - Ollama model used
-- `created_at` - Creation timestamp
-- `starred` - Boolean flag for starred chats
-- `tags` - Comma-separated tags
+#### Individual chat files (`chat-XXX.json`):
+Contains conversation history:
+```json
+{
+  "chat_id": "001",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are Python decorators?",
+      "timestamp": "2024-01-15T10:31:00Z"
+    },
+    {
+      "role": "assistant", 
+      "content": "Python decorators are...",
+      "timestamp": "2024-01-15T10:31:05Z"
+    }
+  ]
+}
+```
 
-#### `messages` table:
-- `id` - Unique message identifier
-- `chat_id` - Reference to parent chat
-- `role` - Either "user" or "assistant"
-- `content` - Message content
-- `timestamp` - Message timestamp
+## Technical Implementation
+
+### Dependencies
+
+The project uses the following libraries:
+- **OkHttp** - For HTTP requests to Ollama API
+- **Gson** - For JSON parsing and serialization
+- **JUnit** - For testing
+
+### Key Components
+
+- `OllamaClient` - Handles HTTP communication with Ollama
+- `ChatManager` - Manages chat storage and retrieval
+- `CommandParser` - Parses command line arguments
+- `ChatSession` - Handles interactive chat sessions
 
 ## Examples
 
@@ -143,36 +201,36 @@ The database contains two main tables:
 
 ```bash
 # Start a new chat with llama2
-python ollama-chat.py chat llama2
+ollama-cli chat llama2
 
 # List all chats
-python ollama-chat.py list
+ollama-cli list
 
 # Resume chat #3
-python ollama-chat.py chat llama2 --resume 3
+ollama-cli chat llama2 --resume 3
 
 # Star chat #3
-python ollama-chat.py star 3
+ollama-cli star 3
 
 # Export chat #3 to JSON
-python ollama-chat.py export 3
+ollama-cli export 3
 ```
 
 ### Sample Chat Session
 
 ```
-$ python ollama-chat.py chat llama2
-📝 Chat title (or press Enter for auto-title): My Python Questions
-🏷  Tags (comma-separated, optional): python, programming
+$ ollama-cli chat llama2
+📝 Chat title (or press Enter for auto-title): My Java Questions
+🏷  Tags (comma-separated, optional): java, programming
 
-💬 Started new chat #1: My Python Questions
+💬 Started new chat #001: My Java Questions
 
 🚀 Chatting with llama2. Type 'exit' to quit, '/star' to star this chat.
 ============================================================
 
-👤 You: What are Python decorators?
+👤 You: What are Java streams?
 
-🤖 Assistant: Python decorators are a powerful feature that allow you to modify or extend the behavior of functions...
+🤖 Assistant: Java streams are a powerful feature introduced in Java 8 that provide a functional approach...
 
 👤 You: /star
 ⭐ Chat starred!
@@ -184,18 +242,50 @@ $ python ollama-chat.py chat llama2
 ### Listing Chats
 
 ```
-$ python ollama-chat.py list
+$ ollama-cli list
 
 📚 All chats:
 --------------------------------------------------------------------------------
-⭐  #1 | My Python Questions                      | llama2         | 2024-01-15 10:30:45
-    #2 | Code Review Session                      | codellama      | 2024-01-15 09:15:22
-    #3 | General Questions                        | llama2         | 2024-01-14 16:45:10
+⭐  #001 | My Java Questions                      | llama2         | 2024-01-15 10:30:45
+    #002 | Code Review Session                    | codellama      | 2024-01-15 09:15:22
+    #003 | General Questions                      | llama2         | 2024-01-14 16:45:10
 ```
 
-## Configuration
+## Development
 
-The CLI automatically creates the necessary directories and database on first run. No additional configuration is required.
+### Project Structure
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/yourname/ollamacli/
+│   │       ├── Main.java
+│   │       ├── OllamaClient.java
+│   │       ├── ChatManager.java
+│   │       ├── CommandParser.java
+│   │       ├── ChatSession.java
+│   │       └── models/
+│   │           ├── Chat.java
+│   │           └── Message.java
+│   └── resources/
+└── test/
+    └── java/
+        └── com/yourname/ollamacli/
+            └── ...
+```
+
+### Running Tests
+
+```bash
+mvn test
+```
+
+### Development Mode
+
+```bash
+mvn exec:java -Dexec.mainClass="com.yourname.ollamacli.Main" -Dexec.args="chat llama2"
+```
 
 ## Troubleshooting
 
@@ -205,28 +295,38 @@ The CLI automatically creates the necessary directories and database on first ru
    - Ensure Ollama is installed and in your PATH
    - Check if Ollama service is running
 
-2. **Permission errors**
-   - Make sure the script is executable: `chmod +x ollama-chat.py`
-   - Check permissions for the `~/.ollama_chat/` directory
+2. **Java version errors**
+   - Ensure you have Java 11 or higher installed
+   - Check with `java --version`
 
-3. **Database errors**
-   - The database is automatically created on first run
-   - If corrupted, you can safely delete `~/.ollama_chat/chats.db` (you'll lose chat history)
+3. **Permission errors**
+   - Make sure the JAR is executable
+   - Check permissions for the `~/.ollama-cli/` directory
+
+4. **HTTP connection errors**
+   - Verify Ollama is running on default port (11434)
+   - Check firewall settings
 
 ### Getting Help
 
 For command-specific help:
 ```bash
-python ollama-chat.py --help
-python ollama-chat.py chat --help
-python ollama-chat.py list --help
+ollama-cli --help
+ollama-cli chat --help
+ollama-cli list --help
 ```
 
 ## Requirements
 
-- Python 3.6+
-- SQLite3 (included with Python)
-- Ollama installed and accessible via command line
+- Java 11 or higher
+- Ollama installed and accessible via HTTP API
+- Maven (for building from source)
+
+## Performance
+
+- **Fast startup**: Plain Java application starts in milliseconds
+- **Low memory**: Minimal memory footprint compared to Spring Boot applications
+- **Portable**: Single JAR file with no external dependencies
 
 ## License
 
@@ -237,8 +337,9 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 Contributions are welcome! Some ideas for improvements:
 
 - Add search functionality for chat history
-- Implement chat import functionality
+- Implement chat import functionality  
 - Add support for system prompts
-- Create a web interface
+- Create configuration file support
 - Add chat statistics and analytics
 - Implement chat backup/restore features
+- Add colored output for better readability
